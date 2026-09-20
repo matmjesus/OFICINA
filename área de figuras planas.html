@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Fórmulas de Área</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quiz-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            color: #718096;
+            margin-bottom: 20px;
+            font-size: 1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .question-counter {
+            color: #718096;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .question-content {
+            display: flex;
+            gap: 20px;
+            align-items: stretch;
+            margin-bottom: 20px;
+        }
+
+        .figure-container {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 20px 15px;
+            border: 3px solid #e2e8f0;
+            flex: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .figure-name {
+            font-size: 1.5rem;
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .figure-svg {
+            margin-bottom: 15px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .figure-svg svg {
+            max-width: 180px;
+            max-height: 180px;
+            width: 100%;
+            height: auto;
+        }
+
+        .question {
+            font-size: 1.1rem;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .options-container {
+            flex: 1;
+            width: 100%;
+        }
+
+        .options-title {
+            font-size: 1.1rem;
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option {
+            background: white;
+            border: 3px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #4a5568;
+            user-select: none;
+        }
+
+        .option:hover {
+            border-color: #4299e1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.15);
+        }
+
+        .option.selected {
+            border-color: #4299e1;
+            background: #ebf8ff;
+            color: #2b6cb0;
+        }
+
+        .option.correct {
+            border-color: #48bb78;
+            background: #f0fff4;
+            color: #22543d;
+            animation: correct 0.5s ease;
+        }
+
+        .option.incorrect {
+            border-color: #f56565;
+            background: #fed7d7;
+            color: #742a2a;
+            animation: incorrect 0.5s ease;
+        }
+
+        .next-button {
+            background: linear-gradient(45deg, #4299e1, #3182ce);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+            width: 100%;
+            max-width: 300px;
+            margin-top: 10px;
+        }
+
+        .next-button.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .results {
+            display: none;
+            text-align: center;
+        }
+
+        .results.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .score {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #48bb78;
+            margin-bottom: 15px;
+        }
+
+        .score-message {
+            font-size: 1.2rem;
+            color: #4a5568;
+            margin-bottom: 25px;
+        }
+
+        .restart-button {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 180px;
+        }
+
+        .restart-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(72, 187, 120, 0.3);
+        }
+
+        .formula {
+            font-family: 'Times New Roman', serif;
+            font-size: 1.2rem;
+            font-style: normal;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+        }
+
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            margin: 0 2px;
+        }
+
+        .numerator {
+            border-bottom: 1px solid currentColor;
+            padding-bottom: 2px;
+            font-size: 0.9em;
+        }
+
+        .denominator {
+            padding-top: 2px;
+            font-size: 0.9em;
+        }
+
+        .superscript {
+            font-size: 0.8em;
+            vertical-align: super;
+            margin-left: 2px;
+            font-weight: bold;
+            position: relative;
+            top: -0.3em;
+        }
+
+        .drag-game {
+            display: none;
+            text-align: center;
+        }
+
+        .drag-game.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .drag-game h2 {
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-size: 1.6rem;
+            font-weight: bold;
+        }
+
+        .slots-area, .shapes-area {
+            margin-bottom: 25px;
+        }
+
+        .slots-area h3, .shapes-area h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .slots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        .formula-slot {
+            background: #f7fafc;
+            border: 3px dashed #cbd5e0;
+            border-radius: 15px;
+            padding: 15px;
+            min-height: 110px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .formula-slot.filled {
+            border-style: solid;
+            border-color: #48bb78;
+            background: #f0fff4;
+            min-height: 160px;
+        }
+
+        .formula-slot.correct {
+            animation: correctSlot 0.5s ease;
+        }
+
+        .formula-slot.error {
+            border-color: #f56565;
+            background: #fed7d7;
+            animation: errorShake 0.5s ease;
+        }
+
+        .formula-slot .slot-formula {
+            order: 1;
+        }
+
+        .formula-slot.filled .slot-formula {
+            order: 2;
+            margin-top: 10px;
+            animation: slideDown 0.3s ease;
+        }
+
+        .formula-slot .draggable-shape {
+            order: 1;
+            margin: 0;
+            border: none;
+            background: transparent;
+            padding: 5px;
+            box-shadow: none;
+            transform: none !important;
+        }
+
+        .shapes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .draggable-shape {
+            background: white;
+            border: 3px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 10px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            text-align: center;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .draggable-shape:active {
+            cursor: grabbing;
+        }
+
+        .draggable-shape.selected-touch {
+            border-color: #3182ce;
+            background-color: #ebf8ff;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.4);
+            transform: scale(1.03);
+        }
+
+        .shape-name {
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 5px;
+            font-size: 1rem;
+        }
+
+        .shape-svg {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .shape-svg svg {
+            max-width: 90px;
+            max-height: 90px;
+            width: 100%;
+            height: auto;
+        }
+
+        .final-results {
+            display: none;
+            text-align: center;
+        }
+
+        .final-results.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes correct {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes incorrect {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @keyframes correctSlot {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        @keyframes slideDown {
+            0% { transform: translateY(-10px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Adaptações Específicas para Telas de Celular */
+        @media (max-width: 650px) {
+            body {
+                padding: 10px;
+            }
+
+            .quiz-container {
+                padding: 20px 15px;
+                border-radius: 16px;
+            }
+
+            h1 {
+                font-size: 1.4rem;
+            }
+
+            .subtitle {
+                font-size: 0.9rem;
+                margin-bottom: 15px;
+            }
+
+            .question-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .figure-container {
+                padding: 15px;
+            }
+
+            .figure-name {
+                font-size: 1.3rem;
+                margin-bottom: 10px;
+            }
+
+            .options-title {
+                text-align: center;
+            }
+
+            .option {
+                padding: 12px;
+                font-size: 0.95rem;
+            }
+
+            .slots-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .shapes-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .drag-game h2 {
+                font-size: 1.3rem;
+            }
+
+            .restart-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>Profº: MARCOS A. DE JESUS<br>MATEMÁTICA</h1>
+        <p class="subtitle">Identifique a fórmula correta para calcular a área de cada figura</p>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div id="quiz">
+            <div class="question-counter">
+                Questão <span id="currentQuestion">1</span> de <span id="totalQuestions">6</span>
+            </div>
+            
+            <div class="question-content">
+                <div class="figure-container">
+                    <div class="figure-name" id="figureName"></div>
+                    <div class="figure-svg" id="figureSvg"></div>
+                    <div class="question">Qual é a fórmula para calcular a área desta figura?</div>
+                </div>
+                
+                <div class="options-container">
+                    <div class="options-title">Escolha a fórmula correta:</div>
+                    <div class="options" id="options"></div>
+                </div>
+            </div>
+            
+            <button class="next-button" id="nextButton" onclick="nextQuestion()">
+                Próxima Questão
+            </button>
+        </div>
+        
+        <div class="results" id="results">
+            <div class="score" id="finalScore"></div>
+            <div class="score-message" id="scoreMessage"></div>
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                <button class="restart-button" onclick="startDragGame()">
+                    🎯 Jogo de Correspondência
+                </button>
+                <button class="restart-button" onclick="restartQuiz()">
+                    🔄 Refazer Quiz
+                </button>
+            </div>
+        </div>
+        
+        <div class="drag-game" id="dragGame">
+            <h2>🎯 Jogo de Correspondência</h2>
+            <p class="subtitle">Toque (ou arraste) na figura e depois selecione a fórmula correspondente</p>
+            <div id="dragGameContainer"></div>
+        </div>
+        
+        <div class="final-results" id="finalResults">
+            <div class="score">🎉</div>
+            <div class="score-message">Parabéns! Você completou todos os desafios!</div>
+            <div class="score-message" style="font-size: 1rem; margin-top: -10px;">
+                Você domina tanto o quiz quanto a correspondência de fórmulas de área!
+            </div>
+            <button class="restart-button" onclick="restartAll()">
+                🔄 Recomeçar Tudo
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                name: "Quadrado",
+                svg: `<svg viewBox="0 0 220 220">
+                    <rect x="35" y="35" width="150" height="150" fill="#4299e1" stroke="#2b6cb0" stroke-width="4"/>
+                    <text x="110" y="210" text-anchor="middle" fill="#2d3748" font-size="18">lado = l</text>
+                </svg>`,
+                correct: 'A = l<span class="superscript">2</span>',
+                options: [
+                    'A = l<span class="superscript">2</span>',
+                    'A = l × h',
+                    'A = π × r<span class="superscript">2</span>',
+                    'A = <span class="fraction"><span class="numerator">b × h</span><span class="denominator">2</span></span>'
+                ]
+            },
+            {
+                name: "Retângulo",
+                svg: `<svg viewBox="0 0 260 180">
+                    <rect x="30" y="30" width="200" height="120" fill="#48bb78" stroke="#38a169" stroke-width="4"/>
+                    <text x="130" y="170" text-anchor="middle" fill="#2d3748" font-size="16">base = b, altura = h</text>
+                </svg>`,
+                correct: 'A = b × h',
+                options: [
+                    'A = b × h',
+                    'A = l<span class="superscript">2</span>',
+                    'A = π × r<span class="superscript">2</span>',
+                    'A = <span class="fraction"><span class="numerator">(B + b) × h</span><span class="denominator">2</span></span>'
+                ]
+            },
+            {
+                name: "Triângulo",
+                svg: `<svg viewBox="0 0 220 220">
+                    <polygon points="110,30 30,180 190,180" fill="#ed8936" stroke="#dd6b20" stroke-width="4"/>
+                    <text x="110" y="210" text-anchor="middle" fill="#2d3748" font-size="16">base = b, altura = h</text>
+                </svg>`,
+                correct: 'A = <span class="fraction"><span class="numerator">b × h</span><span class="denominator">2</span></span>',
+                options: [
+                    'A = <span class="fraction"><span class="numerator">b × h</span><span class="denominator">2</span></span>',
+                    'A = b × h',
+                    'A = l<span class="superscript">2</span>',
+                    'A = π × r<span class="superscript">2</span>'
+                ]
+            },
+            {
+                name: "Círculo",
+                svg: `<svg viewBox="0 0 220 220">
+                    <circle cx="110" cy="110" r="75" fill="#9f7aea" stroke="#805ad5" stroke-width="4"/>
+                    <text x="110" y="210" text-anchor="middle" fill="#2d3748" font-size="16">raio = r</text>
+                </svg>`,
+                correct: 'A = π × r<span class="superscript">2</span>',
+                options: [
+                    'A = π × r<span class="superscript">2</span>',
+                    'A = 2 × π × r',
+                    'A = l<span class="superscript">2</span>',
+                    'A = <span class="fraction"><span class="numerator">b × h</span><span class="denominator">2</span></span>'
+                ]
+            },
+            {
+                name: "Losango",
+                svg: `<svg viewBox="0 0 220 220">
+                    <polygon points="110,30 180,110 110,190 40,110" fill="#f56565" stroke="#e53e3e" stroke-width="4"/>
+                    <line x1="110" y1="30" x2="110" y2="190" stroke="#2d3748" stroke-width="3" stroke-dasharray="8,8"/>
+                    <line x1="40" y1="110" x2="180" y2="110" stroke="#2d3748" stroke-width="3" stroke-dasharray="8,8"/>
+                    <text x="110" y="215" text-anchor="middle" fill="#2d3748" font-size="13">D = diag. maior, d = diag. menor</text>
+                </svg>`,
+                correct: 'A = <span class="fraction"><span class="numerator">D × d</span><span class="denominator">2</span></span>',
+                options: [
+                    'A = <span class="fraction"><span class="numerator">D × d</span><span class="denominator">2</span></span>',
+                    'A = l<span class="superscript">2</span>',
+                    'A = b × h',
+                    'A = π × r<span class="superscript">2</span>'
+                ]
+            },
+            {
+                name: "Trapézio",
+                svg: `<svg viewBox="0 0 240 180">
+                    <polygon points="75,30 165,30 195,150 45,150" fill="#38b2ac" stroke="#319795" stroke-width="4"/>
+                    <line x1="75" y1="30" x2="45" y2="150" stroke="#2d3748" stroke-width="3" stroke-dasharray="6,6"/>
+                    <line x1="165" y1="30" x2="195" y2="150" stroke="#2d3748" stroke-width="3" stroke-dasharray="6,6"/>
+                    <text x="120" y="175" text-anchor="middle" fill="#2d3748" font-size="12">B = base maior, b = base menor, h = altura</text>
+                </svg>`,
+                correct: 'A = <span class="fraction"><span class="numerator">(B + b) × h</span><span class="denominator">2</span></span>',
+                options: [
+                    'A = <span class="fraction"><span class="numerator">(B + b) × h</span><span class="denominator">2</span></span>',
+                    'A = b × h',
+                    'A = <span class="fraction"><span class="numerator">b × h</span><span class="denominator">2</span></span>',
+                    'A = l<span class="superscript">2</span>'
+                ]
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let isAnswered = false;
+
+        function initQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            isAnswered = false;
+            document.getElementById('quiz').style.display = 'block';
+            document.getElementById('results').classList.remove('show');
+            document.getElementById('dragGame').classList.remove('show');
+            document.getElementById('finalResults').classList.remove('show');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const question = questions[currentQuestionIndex];
+            isAnswered = false;
+            
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            document.getElementById('totalQuestions').textContent = questions.length;
+            document.getElementById('figureName').textContent = question.name;
+            document.getElementById('figureSvg').innerHTML = question.svg;
+            
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+            
+            const shuffledOptions = [...question.options].sort(() => Math.random() - 0.5);
+            
+            shuffledOptions.forEach(optionText => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.innerHTML = `<span class="formula">${optionText}</span>`;
+                optionElement.onclick = () => selectOption(optionElement, optionText, question.correct);
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            document.getElementById('nextButton').classList.remove('show');
+            updateProgress();
+        }
+
+        function selectOption(element, selectedOptionText, correctText) {
+            if (isAnswered) return;
+            isAnswered = true;
+            
+            element.classList.add('selected');
+            
+            setTimeout(() => {
+                const options = document.querySelectorAll('.option');
+                options.forEach(opt => {
+                    const formulaHTML = opt.querySelector('.formula').innerHTML;
+                    if (formulaHTML === correctText) {
+                        opt.classList.add('correct');
+                    } else if (opt.classList.contains('selected') && formulaHTML !== correctText) {
+                        opt.classList.add('incorrect');
+                    }
+                });
+                
+                if (selectedOptionText === correctText) {
+                    score++;
+                }
+                
+                document.getElementById('nextButton').classList.add('show');
+            }, 300);
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz').style.display = 'none';
+            
+            const percentage = Math.round((score / questions.length) * 100);
+            document.getElementById('finalScore').textContent = `${score}/${questions.length}`;
+            
+            let message = '';
+            if (percentage === 100) {
+                message = '🎉 Perfeito! Você domina as fórmulas de área!';
+            } else if (percentage >= 80) {
+                message = '👏 Muito bem! Você tem um ótimo conhecimento!';
+            } else if (percentage >= 60) {
+                message = '👍 Bom trabalho! Continue praticando!';
+            } else {
+                message = '📚 Continue estudando! Você vai melhorar!';
+            }
+            
+            document.getElementById('scoreMessage').textContent = message;
+            document.getElementById('results').classList.add('show');
+        }
+
+        function startDragGame() {
+            document.getElementById('results').classList.remove('show');
+            document.getElementById('dragGame').classList.add('show');
+            initDragGame();
+        }
+
+        let draggedElement = null;
+        let selectedTouchShape = null;
+        let correctMatches = 0;
+
+        function initDragGame() {
+            correctMatches = 0;
+            selectedTouchShape = null;
+            draggedElement = null;
+
+            const gameContainer = document.getElementById('dragGameContainer');
+            gameContainer.innerHTML = '';
+            
+            const formulas = [
+                { formula: 'A = l<span class="superscript">2</span>', name: 'Quadrado' },
+                { formula: 'A = b × h', name: 'Retângulo' },
+                { formula: 'A = <span class="fraction"><span class="numerator">b × h</span><span class="denominator">2</span></span>', name: 'Triângulo' },
+                { formula: 'A = π × r<span class="superscript">2</span>', name: 'Círculo' },
+                { formula: 'A = <span class="fraction"><span class="numerator">D × d</span><span class="denominator">2</span></span>', name: 'Losango' },
+                { formula: 'A = <span class="fraction"><span class="numerator">(B + b) × h</span><span class="denominator">2</span></span>', name: 'Trapézio' }
+            ];
+            
+            // Área de slots
+            const slotsArea = document.createElement('div');
+            slotsArea.className = 'slots-area';
+            slotsArea.innerHTML = '<h3>Associe aos locais corretos:</h3>';
+            
+            const slotsGrid = document.createElement('div');
+            slotsGrid.className = 'slots-grid';
+            
+            formulas.forEach((item) => {
+                const slot = document.createElement('div');
+                slot.className = 'formula-slot';
+                slot.dataset.shape = item.name;
+                slot.innerHTML = `<div class="formula slot-formula">${item.formula}</div>`;
+                
+                // Eventos de Drag & Drop (Desktop)
+                slot.addEventListener('dragover', handleDragOver);
+                slot.addEventListener('drop', handleDrop);
+                
+                // Evento de Clique/Toque (Mobile)
+                slot.addEventListener('click', handleSlotClick);
+                
+                slotsGrid.appendChild(slot);
+            });
+            
+            slotsArea.appendChild(slotsGrid);
+            gameContainer.appendChild(slotsArea);
+            
+            // Área de figuras
+            const shapesArea = document.createElement('div');
+            shapesArea.className = 'shapes-area';
+            shapesArea.innerHTML = '<h3>Figuras Geométricas:</h3>';
+            
+            const shapesGrid = document.createElement('div');
+            shapesGrid.className = 'shapes-grid';
+            
+            const shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
+            
+            shuffledQuestions.forEach((question) => {
+                const shape = document.createElement('div');
+                shape.className = 'draggable-shape';
+                shape.draggable = true;
+                shape.dataset.shape = question.name;
+                shape.innerHTML = `
+                    <div class="shape-name">${question.name}</div>
+                    <div class="shape-svg">${question.svg}</div>
+                `;
+                
+                // Eventos de Drag & Drop (Desktop)
+                shape.addEventListener('dragstart', handleDragStart);
+                shape.addEventListener('dragend', handleDragEnd);
+                
+                // Evento de Clique/Toque (Mobile)
+                shape.addEventListener('click', handleShapeTouch);
+                
+                shapesGrid.appendChild(shape);
+            });
+            
+            shapesArea.appendChild(shapesGrid);
+            gameContainer.appendChild(shapesArea);
+        }
+
+        // Handlers para Desktop (Drag & Drop)
+        function handleDragStart(e) {
+            draggedElement = e.currentTarget;
+            e.currentTarget.style.opacity = '0.5';
+        }
+
+        function handleDragEnd(e) {
+            e.currentTarget.style.opacity = '1';
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const slot = e.target.closest('.formula-slot');
+            if (!slot || !draggedElement) return;
+
+            processMatch(draggedElement, slot);
+        }
+
+        // Handlers para Mobile / Touch Click
+        function handleShapeTouch(e) {
+            const shape = e.currentTarget;
+            if (shape.closest('.formula-slot')) return; // Já posicionado
+
+            if (selectedTouchShape === shape) {
+                shape.classList.remove('selected-touch');
+                selectedTouchShape = null;
+            } else {
+                if (selectedTouchShape) {
+                    selectedTouchShape.classList.remove('selected-touch');
+                }
+                selectedTouchShape = shape;
+                shape.classList.add('selected-touch');
+            }
+        }
+
+        function handleSlotClick(e) {
+            const slot = e.currentTarget;
+            if (!selectedTouchShape || slot.classList.contains('filled')) return;
+
+            processMatch(selectedTouchShape, slot);
+            
+            if (selectedTouchShape) {
+                selectedTouchShape.classList.remove('selected-touch');
+                selectedTouchShape = null;
+            }
+        }
+
+        // Lógica Unificada de Validação de Match
+        function processMatch(shapeElem, slotElem) {
+            const draggedShapeName = shapeElem.dataset.shape;
+            const targetSlotName = slotElem.dataset.shape;
+
+            if (draggedShapeName === targetSlotName && !slotElem.classList.contains('filled')) {
+                slotElem.appendChild(shapeElem);
+                slotElem.classList.add('filled', 'correct');
+                shapeElem.style.opacity = '1';
+                shapeElem.draggable = false;
+                
+                correctMatches++;
+
+                if (correctMatches === questions.length) {
+                    setTimeout(showDragGameResults, 500);
+                }
+            } else if (draggedShapeName !== targetSlotName) {
+                slotElem.classList.add('error');
+                setTimeout(() => {
+                    slotElem.classList.remove('error');
+                }, 500);
+            }
+        }
+
+        function showDragGameResults() {
+            document.getElementById('dragGame').classList.remove('show');
+            document.getElementById('finalResults').classList.add('show');
+        }
+
+        function restartAll() {
+            initQuiz();
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function restartQuiz() {
+            initQuiz();
+        }
+
+        // Inicializa o quiz
+        initQuiz();
+    </script>
+</body>
+</html>

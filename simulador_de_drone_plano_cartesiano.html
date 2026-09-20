@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Simulador de Drone - Plano Cartesiano</title>
+    <!-- Tailwind CSS for modern responsive layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            800: '#152c5b',
+                            900: '#0f1d3e',
+                            950: '#0a1329',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* Glossy pill button styles */
+        .btn-pill {
+            transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .btn-pill::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 45%;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0));
+            pointer-events: none;
+            border-top-left-radius: 9999px;
+            border-top-right-radius: 9999px;
+        }
+
+        .btn-pill:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+            filter: brightness(1.08);
+        }
+
+        .btn-pill:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            filter: brightness(0.95);
+        }
+
+        /* Canvas touch optimization */
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-3 sm:p-6 select-none overflow-x-hidden">
+
+    <div class="w-full max-w-5xl flex flex-col md:flex-row items-center md:items-stretch justify-center gap-4 md:gap-6">
+        
+        <!-- SIDEBAR PANEL (Height matched to Cartesian canvas container) -->
+        <aside class="w-full md:w-80 lg:w-88 bg-gradient-to-b from-navy-800 via-navy-900 to-navy-950 p-4 sm:p-5 flex flex-col justify-between rounded-2xl shadow-2xl border border-slate-700/50 shrink-0">
+            
+            <div class="space-y-4">
+                <!-- Header Title -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-extrabold text-white tracking-wide drop-shadow-md">Cartesiano</h1>
+                        <p class="text-[11px] text-sky-200/80">Simulador de Drone</p>
+                    </div>
+                    <span class="text-[10px] bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded-md font-mono border border-sky-400/30">
+                        Atalho: [1]
+                    </span>
+                </div>
+
+                <!-- Compact Posição Atual Card -->
+                <div class="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10 shadow-inner flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] uppercase tracking-wider text-sky-300 font-semibold block">Posição Atual</span>
+                        <span id="posDisplay" class="text-xl sm:text-2xl font-black text-white tracking-wider">(1, 1)</span>
+                    </div>
+                    <div class="flex items-center space-x-1.5 bg-black/20 px-2.5 py-1 rounded-full border border-white/5">
+                        <span id="statusIndicator" class="relative flex h-2.5 w-2.5">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                        </span>
+                        <span id="statusText" class="text-xs text-emerald-300 font-medium">Pronto</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="space-y-2.5">
+                    <!-- 1. Movimento Aleatorio (Green) with Key 1 Badge -->
+                    <button id="btnRandom" class="btn-pill w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-green-500 text-white font-bold text-sm flex items-center justify-between shadow-lg">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-base">🎲</span>
+                            <span>Movimento Aleatório</span>
+                        </div>
+                        <span class="bg-black/20 text-emerald-100 text-[10px] font-mono px-1.5 py-0.5 rounded border border-white/10">1</span>
+                    </button>
+
+                    <!-- 2. Voltar ao Centro (1,1) (Blue) -->
+                    <button id="btnCenter" class="btn-pill w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold text-sm flex items-center justify-start space-x-2 shadow-lg">
+                        <span class="text-base">🎯</span>
+                        <span>Voltar ao Centro (1,1)</span>
+                    </button>
+
+                    <!-- 3. Modo Automático (Blue / Amber) -->
+                    <button id="btnAuto" class="btn-pill w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-blue-400 to-indigo-500 text-white font-bold text-sm flex items-center justify-start space-x-2 shadow-lg">
+                        <span id="autoIcon" class="text-base">▶</span>
+                        <span id="autoText">Modo Automático</span>
+                    </button>
+                </div>
+
+                <!-- Speed & Sound Controls -->
+                <div class="bg-black/20 rounded-xl p-3 border border-white/5 space-y-2">
+                    <div>
+                        <div class="flex justify-between text-xs text-sky-200 mb-1 font-medium">
+                            <span>Velocidade de Voo</span>
+                            <span id="speedValue" class="text-sky-300 font-mono">Normal</span>
+                        </div>
+                        <input type="range" id="speedSlider" min="0.3" max="2.0" step="0.1" value="1.0" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-400">
+                    </div>
+
+                    <div class="flex items-center justify-between text-xs text-sky-100 pt-1 border-t border-white/5">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="chkAudio" checked class="w-3.5 h-3.5 rounded bg-slate-800 border-slate-600 text-sky-500 focus:ring-0">
+                            <span>Efeitos Sonoros</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Hint -->
+            <div class="pt-3 border-t border-white/10 text-center text-[10px] text-sky-300/70">
+                Toque no gráfico ou aperte <kbd class="px-1 py-0.5 bg-white/10 rounded font-mono text-white">1</kbd>
+            </div>
+        </aside>
+
+        <!-- CARTESIAN PLANE CONTAINER -->
+        <main class="w-full md:w-auto flex-1 bg-white rounded-2xl p-2 sm:p-4 shadow-2xl border border-slate-200 flex items-center justify-center relative min-h-[320px] sm:min-h-[460px]">
+            <div id="canvasContainer" class="w-full h-full max-w-[85vw] max-h-[85vw] sm:max-w-[500px] sm:max-h-[500px] aspect-square relative flex items-center justify-center">
+                <canvas id="cartesianCanvas" class="w-full h-full block cursor-crosshair rounded-xl"></canvas>
+                
+                <!-- Floating Tooltip -->
+                <div id="gridTooltip" class="absolute pointer-events-none bg-slate-900/90 text-white text-xs font-mono px-2 py-1 rounded shadow-lg border border-slate-700 backdrop-blur-sm opacity-0 transition-opacity duration-150 z-20">
+                    (0, 0)
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Web Audio Synthesizer for Motor Sound and Chime
+        class DroneAudio {
+            constructor() {
+                this.ctx = null;
+                this.osc = null;
+                this.gain = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (this.ctx) return;
+                try {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioCtx();
+                } catch (e) {
+                    console.log('AudioContext not supported');
+                }
+            }
+
+            startEngine() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+
+                if (this.osc) return;
+
+                this.osc = this.ctx.createOscillator();
+                this.gain = this.ctx.createGain();
+
+                this.osc.type = 'sawtooth';
+                this.osc.frequency.setValueAtTime(65, this.ctx.currentTime);
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(180, this.ctx.currentTime);
+
+                this.gain.gain.setValueAtTime(0.02, this.ctx.currentTime);
+
+                this.osc.connect(filter);
+                filter.connect(this.gain);
+                this.gain.connect(this.ctx.destination);
+
+                this.osc.start();
+            }
+
+            updatePitch(speedRatio) {
+                if (!this.osc || !this.ctx) return;
+                const baseFreq = 65 + (speedRatio * 45);
+                this.osc.frequency.setTargetAtTime(baseFreq, this.ctx.currentTime, 0.05);
+            }
+
+            stopEngine() {
+                if (this.gain && this.ctx) {
+                    this.gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.1);
+                    setTimeout(() => {
+                        if (this.osc) {
+                            try { this.osc.stop(); } catch(e) {}
+                            this.osc.disconnect();
+                            this.osc = null;
+                        }
+                    }, 120);
+                }
+            }
+
+            playTargetChime() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+
+                const now = this.ctx.currentTime;
+                const osc1 = this.ctx.createOscillator();
+                const gain1 = this.ctx.createGain();
+
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(523.25, now);
+                osc1.frequency.exponentialRampToValueAtTime(659.25, now + 0.12);
+
+                gain1.gain.setValueAtTime(0.08, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+                osc1.connect(gain1);
+                gain1.connect(this.ctx.destination);
+
+                osc1.start(now);
+                osc1.stop(now + 0.35);
+            }
+        }
+
+        const canvas = document.getElementById('cartesianCanvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('canvasContainer');
+        const posDisplay = document.getElementById('posDisplay');
+        const statusText = document.getElementById('statusText');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const gridTooltip = document.getElementById('gridTooltip');
+
+        const btnRandom = document.getElementById('btnRandom');
+        const btnCenter = document.getElementById('btnCenter');
+        const btnAuto = document.getElementById('btnAuto');
+        const autoIcon = document.getElementById('autoIcon');
+        const autoText = document.getElementById('autoText');
+        const speedSlider = document.getElementById('speedSlider');
+        const speedValue = document.getElementById('speedValue');
+        const chkAudio = document.getElementById('chkAudio');
+
+        const audio = new DroneAudio();
+
+        const GRID_MIN = -5;
+        const GRID_MAX = 5;
+        let dpr = window.devicePixelRatio || 1;
+        let canvasWidth = 0;
+        let canvasHeight = 0;
+        let originX = 0;
+        let originY = 0;
+        let stepSize = 0;
+
+        let currentPos = { x: 1, y: 1 };
+        let startPos = { x: 1, y: 1 };
+        let targetPos = { x: 1, y: 1 };
+
+        let isMoving = false;
+        let animProgress = 0;
+        let animDuration = 1000;
+        let lastTimestamp = 0;
+        let rotorAngle = 0;
+        let isAutoMode = false;
+        let autoTimer = null;
+
+        function resizeCanvas() {
+            const rect = container.getBoundingClientRect();
+            const size = Math.floor(Math.min(rect.width, rect.height));
+
+            dpr = window.devicePixelRatio || 1;
+            canvasWidth = size;
+            canvasHeight = size;
+
+            canvas.width = size * dpr;
+            canvas.height = size * dpr;
+            canvas.style.width = `${size}px`;
+            canvas.style.height = `${size}px`;
+
+            ctx.scale(dpr, dpr);
+
+            const margin = size * 0.08;
+            const usableSize = size - (margin * 2);
+            stepSize = usableSize / (GRID_MAX - GRID_MIN);
+
+            originX = margin + (0 - GRID_MIN) * stepSize;
+            originY = margin + (GRID_MAX - 0) * stepSize;
+
+            render();
+        }
+
+        function gridToPixel(x, y) {
+            return {
+                px: originX + x * stepSize,
+                py: originY - y * stepSize
+            };
+        }
+
+        function pixelToGrid(px, py) {
+            const gx = Math.round((px - originX) / stepSize);
+            const gy = Math.round((originY - py) / stepSize);
+            return {
+                x: Math.max(GRID_MIN, Math.min(GRID_MAX, gx)),
+                y: Math.max(GRID_MIN, Math.min(GRID_MAX, gy))
+            };
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+            // Background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+            drawGrid();
+            drawAxes();
+            drawProjections();
+            drawDrone();
+        }
+
+        function drawGrid() {
+            ctx.save();
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]);
+
+            for (let i = GRID_MIN; i <= GRID_MAX; i++) {
+                // Vertical lines
+                const pX = gridToPixel(i, 0).px;
+                ctx.beginPath();
+                ctx.moveTo(pX, gridToPixel(0, GRID_MAX).py);
+                ctx.lineTo(pX, gridToPixel(0, GRID_MIN).py);
+                ctx.stroke();
+
+                // Horizontal lines
+                const pY = gridToPixel(0, i).py;
+                ctx.beginPath();
+                ctx.moveTo(gridToPixel(GRID_MIN, 0).px, pY);
+                ctx.lineTo(gridToPixel(GRID_MAX, 0).px, pY);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function drawAxes() {
+            ctx.save();
+            ctx.lineWidth = 2.2;
+            ctx.strokeStyle = '#1e293b';
+
+            // X Axis
+            ctx.beginPath();
+            ctx.moveTo(gridToPixel(GRID_MIN, 0).px, originY);
+            ctx.lineTo(gridToPixel(GRID_MAX, 0).px, originY);
+            ctx.stroke();
+
+            // Y Axis
+            ctx.beginPath();
+            ctx.moveTo(originX, gridToPixel(0, GRID_MIN).py);
+            ctx.lineTo(originX, gridToPixel(0, GRID_MAX).py);
+            ctx.stroke();
+
+            const fontSize = Math.max(10, Math.floor(stepSize * 0.28));
+            ctx.font = `700 ${fontSize}px Inter, sans-serif`;
+
+            // X Axis Numbers
+            for (let i = GRID_MIN; i <= GRID_MAX; i++) {
+                if (i === 0) continue;
+                const pt = gridToPixel(i, 0);
+                ctx.fillStyle = (i < 0) ? '#dc2626' : '#1e293b';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                ctx.fillText(i.toString(), pt.px, originY + 6);
+            }
+
+            // Y Axis Numbers
+            for (let j = GRID_MIN; j <= GRID_MAX; j++) {
+                if (j === 0) continue;
+                const pt = gridToPixel(0, j);
+                ctx.fillStyle = (j < 0) ? '#dc2626' : '#1e293b';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(j.toString(), originX - 8, pt.py);
+            }
+
+            ctx.restore();
+        }
+
+        function drawProjections() {
+            const currPx = gridToPixel(currentPos.x, currentPos.y);
+
+            ctx.save();
+            ctx.strokeStyle = '#dc2626';
+            ctx.lineWidth = 1.8;
+            ctx.setLineDash([5, 4]);
+
+            // Projection to X
+            ctx.beginPath();
+            ctx.moveTo(currPx.px, currPx.py);
+            ctx.lineTo(currPx.px, originY);
+            ctx.stroke();
+
+            // Projection to Y
+            ctx.beginPath();
+            ctx.moveTo(currPx.px, currPx.py);
+            ctx.lineTo(originX, currPx.py);
+            ctx.stroke();
+
+            // Dot indicators
+            ctx.fillStyle = '#dc2626';
+            ctx.beginPath();
+            ctx.arc(currPx.px, originY, 3.5, 0, Math.PI * 2);
+            ctx.arc(originX, currPx.py, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawDrone() {
+            const pt = gridToPixel(currentPos.x, currentPos.y);
+            // Drone radius enlarged by 10% (0.352 ratio)
+            const radius = Math.max(18, stepSize * 0.352);
+
+            ctx.save();
+            ctx.translate(pt.px, pt.py);
+
+            // Shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+            ctx.beginPath();
+            ctx.ellipse(2, radius * 0.8, radius * 0.8, radius * 0.4, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Cross arms
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = Math.max(3, radius * 0.18);
+
+            const armOffset = radius * 0.65;
+            ctx.beginPath();
+            ctx.moveTo(-armOffset, -armOffset);
+            ctx.lineTo(armOffset, armOffset);
+            ctx.moveTo(armOffset, -armOffset);
+            ctx.lineTo(-armOffset, armOffset);
+            ctx.stroke();
+
+            // Rotors
+            const rotorDist = radius * 0.72;
+            const rotorRadius = radius * 0.45;
+            const angles = [
+                { x: -rotorDist, y: -rotorDist },
+                { x: rotorDist, y: -rotorDist },
+                { x: -rotorDist, y: rotorDist },
+                { x: rotorDist, y: rotorDist }
+            ];
+
+            angles.forEach((pos, idx) => {
+                ctx.save();
+                ctx.translate(pos.x, pos.y);
+
+                ctx.fillStyle = '#1e293b';
+                ctx.beginPath();
+                ctx.arc(0, 0, rotorRadius * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.strokeStyle = 'rgba(100, 116, 139, 0.65)';
+                ctx.lineWidth = 2;
+                ctx.rotate(rotorAngle * (idx % 2 === 0 ? 1 : -1));
+
+                ctx.beginPath();
+                ctx.ellipse(0, 0, rotorRadius, rotorRadius * 0.25, 0, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.restore();
+            });
+
+            // Central body
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath();
+            ctx.arc(0, 0, radius * 0.52, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#dc2626';
+            ctx.beginPath();
+            ctx.arc(0, 0, radius * 0.38, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#1e1b18';
+            ctx.beginPath();
+            ctx.arc(0, 0, radius * 0.22, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Status LED
+            const ledGlow = (Math.sin(Date.now() * 0.008) + 1) * 0.5;
+            ctx.fillStyle = isMoving ? `rgba(59, 130, 246, ${0.4 + ledGlow * 0.6})` : `rgba(34, 197, 94, ${0.4 + ledGlow * 0.6})`;
+            ctx.beginPath();
+            ctx.arc(0, 0, radius * 0.09, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function easeInOutCubic(t) {
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        }
+
+        function flyTo(targetX, targetY) {
+            targetX = Math.max(GRID_MIN, Math.min(GRID_MAX, Math.round(targetX)));
+            targetY = Math.max(GRID_MIN, Math.min(GRID_MAX, Math.round(targetY)));
+
+            if (targetX === targetPos.x && targetY === targetPos.y && !isMoving) {
+                return;
+            }
+
+            startPos = { x: currentPos.x, y: currentPos.y };
+            targetPos = { x: targetX, y: targetY };
+
+            const dx = targetPos.x - startPos.x;
+            const dy = targetPos.y - startPos.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance === 0) return;
+
+            const baseSpeedFactor = parseFloat(speedSlider.value);
+            animDuration = Math.max(350, (distance * 280) / baseSpeedFactor);
+            animProgress = 0;
+            isMoving = true;
+
+            statusText.textContent = `Em Voo`;
+            statusText.className = 'text-xs text-sky-300 font-medium';
+            statusIndicator.innerHTML = `
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-500"></span>
+            `;
+
+            if (chkAudio.checked) {
+                audio.startEngine();
+            }
+        }
+
+        function triggerRandomMove() {
+            let nextX, nextY;
+            do {
+                nextX = Math.floor(Math.random() * (GRID_MAX - GRID_MIN + 1)) + GRID_MIN;
+                nextY = Math.floor(Math.random() * (GRID_MAX - GRID_MIN + 1)) + GRID_MIN;
+            } while (nextX === targetPos.x && nextY === targetPos.y);
+
+            flyTo(nextX, nextY);
+        }
+
+        function toggleAutoMode() {
+            isAutoMode = !isAutoMode;
+
+            if (isAutoMode) {
+                autoIcon.textContent = '⏸';
+                autoText.textContent = 'Pausar Automático';
+                btnAuto.classList.remove('from-blue-400', 'to-indigo-500');
+                btnAuto.classList.add('from-amber-500', 'to-orange-600');
+
+                triggerRandomMove();
+                autoTimer = setInterval(() => {
+                    if (!isMoving) {
+                        triggerRandomMove();
+                    }
+                }, 1600);
+            } else {
+                autoIcon.textContent = '▶';
+                autoText.textContent = 'Modo Automático';
+                btnAuto.classList.remove('from-amber-500', 'to-orange-600');
+                btnAuto.classList.add('from-blue-400', 'to-indigo-500');
+
+                if (autoTimer) {
+                    clearInterval(autoTimer);
+                    autoTimer = null;
+                }
+            }
+        }
+
+        function animate(timestamp) {
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            const delta = timestamp - lastTimestamp;
+            lastTimestamp = timestamp;
+
+            rotorAngle += (isMoving ? 0.35 : 0.12);
+
+            if (isMoving) {
+                animProgress += delta / animDuration;
+
+                if (animProgress >= 1.0) {
+                    animProgress = 1.0;
+                    currentPos = { x: targetPos.x, y: targetPos.y };
+                    isMoving = false;
+
+                    posDisplay.textContent = `(${currentPos.x}, ${currentPos.y})`;
+                    statusText.textContent = 'Pronto';
+                    statusText.className = 'text-xs text-emerald-300 font-medium';
+                    statusIndicator.innerHTML = `
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    `;
+
+                    audio.stopEngine();
+                    if (chkAudio.checked) {
+                        audio.playTargetChime();
+                    }
+                } else {
+                    const eased = easeInOutCubic(animProgress);
+                    currentPos.x = startPos.x + (targetPos.x - startPos.x) * eased;
+                    currentPos.y = startPos.y + (targetPos.y - startPos.y) * eased;
+
+                    audio.updatePitch(Math.sin(animProgress * Math.PI));
+                    posDisplay.textContent = `(${Math.round(currentPos.x)}, ${Math.round(currentPos.y)})`;
+                }
+            }
+
+            render();
+            requestAnimationFrame(animate);
+        }
+
+        function handleCanvasPointer(clientX, clientY) {
+            const rect = canvas.getBoundingClientRect();
+            const clickPx = clientX - rect.left;
+            const clickPy = clientY - rect.top;
+
+            const gridPoint = pixelToGrid(clickPx, clickPy);
+            flyTo(gridPoint.x, gridPoint.y);
+        }
+
+        canvas.addEventListener('click', (e) => {
+            handleCanvasPointer(e.clientX, e.clientY);
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            if (e.touches && e.touches.length > 0) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                handleCanvasPointer(touch.clientX, touch.clientY);
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mousePx = e.clientX - rect.left;
+            const mousePy = e.clientY - rect.top;
+
+            const gridPoint = pixelToGrid(mousePx, mousePy);
+
+            gridTooltip.textContent = `(${gridPoint.x}, ${gridPoint.y})`;
+            gridTooltip.style.left = `${e.clientX - rect.left + 15}px`;
+            gridTooltip.style.top = `${e.clientY - rect.top - 25}px`;
+            gridTooltip.style.opacity = '1';
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            gridTooltip.style.opacity = '0';
+        });
+
+        // Key '1' shortcut for random flight
+        window.addEventListener('keydown', (e) => {
+            if (e.key === '1' || e.code === 'Digit1' || e.code === 'Numpad1') {
+                if (isAutoMode) toggleAutoMode();
+                triggerRandomMove();
+            }
+        });
+
+        btnRandom.addEventListener('click', () => {
+            if (isAutoMode) toggleAutoMode();
+            triggerRandomMove();
+        });
+
+        btnCenter.addEventListener('click', () => {
+            if (isAutoMode) toggleAutoMode();
+            flyTo(1, 1);
+        });
+
+        btnAuto.addEventListener('click', () => {
+            toggleAutoMode();
+        });
+
+        speedSlider.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            if (val < 0.7) speedValue.textContent = 'Lento';
+            else if (val > 1.4) speedValue.textContent = 'Rápido';
+            else speedValue.textContent = 'Normal';
+        });
+
+        chkAudio.addEventListener('change', (e) => {
+            audio.enabled = e.target.checked;
+            if (!e.target.checked) audio.stopEngine();
+        });
+
+        window.addEventListener('resize', resizeCanvas);
+
+        window.onload = function() {
+            resizeCanvas();
+            requestAnimationFrame(animate);
+        };
+    </script>
+</body>
+</html>

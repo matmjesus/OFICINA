@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oficina IA — Apoio Pedagógico</title>
+  
+  <!-- Fontes do Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS & Ícones Lucide -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            sky: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0284c7',
+              600: '#0369a1',
+            },
+            amber: {
+              50: '#fffbeb',
+              100: '#fef3c7',
+              500: '#f59e0b',
+              600: '#d97706',
+            },
+            slate: {
+              50: '#f8fafc',
+              100: '#f1f5f9',
+              200: '#e2e8f0',
+              600: '#475569',
+              800: '#1e293b',
+              900: '#0f172a',
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            serif: ['"Source Serif 4"', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+    }
+
+    .light-bg-gradient {
+      background: radial-gradient(120% 120% at 50% 0%, #f0f9ff 0%, #f8fafc 65%, #ffffff 100%);
+    }
+
+    @keyframes subtle-float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+    .floating-orb {
+      animation: subtle-float 6s ease-in-out infinite;
+    }
+  </style>
+ </head>
+ 
+ <body class="bg-slate-50 text-slate-800 font-sans min-h-full flex flex-col antialiased selection:bg-sky-100 selection:text-sky-900 overflow-x-hidden">
+
+  <!-- Header Superior -->
+  <header class="w-full border-b border-slate-200/80 bg-white/90 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-2 sm:space-x-2.5">
+        <div class="p-1 bg-sky-500 text-white rounded-lg shadow-sm shadow-sky-500/20 flex items-center justify-center">
+          <i data-lucide="sparkles" class="w-2.5 h-2.5 sm:w-3 sm:h-3"></i>
+        </div>
+        <span class="font-bold text-base sm:text-lg text-slate-900 tracking-tight">Oficina IA <span class="text-slate-400 font-normal hidden sm:inline">| Apoio Docente</span></span>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          Ambiente Interativo
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Shell Principal -->
+  <main class="flex-1 light-bg-gradient relative overflow-hidden flex items-center justify-center p-3 sm:p-6 lg:p-12">
+    
+    <!-- Elementos Decorativos -->
+    <div class="floating-orb absolute top-5 right-5 sm:top-10 sm:right-10 w-64 h-64 sm:w-96 sm:h-96 bg-sky-200/40 rounded-full blur-3xl pointer-events-none" aria-hidden="true"></div>
+    <div class="floating-orb absolute -bottom-10 -left-10 w-60 h-60 sm:w-80 sm:h-80 bg-amber-100/60 rounded-full blur-3xl pointer-events-none" aria-hidden="true"></div>
+
+    <section class="relative w-full max-w-5xl glass-panel rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl shadow-sky-900/5 p-4 sm:p-8 lg:p-12 z-10">
+      
+      <div class="h-1.5 w-16 sm:w-20 bg-gradient-to-r from-sky-500 to-amber-500 rounded-full mb-6 sm:mb-8" aria-hidden="true"></div>
+
+      <div id="panel-content" class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-center">
+        
+        <!-- Visão Inicial (Esquerda) -->
+        <div class="lg:col-span-7 space-y-4 sm:space-y-6">
+          
+          <div class="intro-view space-y-4 sm:space-y-6">
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 border border-sky-100 text-sky-600 text-xs font-bold tracking-wider uppercase">
+              <i data-lucide="graduation-cap" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+              <span>Formação Docente</span>
+            </div>
+
+            <h1 class="text-xl sm:text-3xl lg:text-4xl font-serif font-bold text-slate-900 tracking-tight leading-snug sm:leading-tight uppercase">
+              IA - APOIO PEDAGÓGICO PARA SALA DE AULA
+            </h1>
+
+            <!-- IMAGEM FAMÍLIA E ESCOLA -->
+            <div class="w-full overflow-hidden rounded-2xl border border-slate-200/80 shadow-md bg-white p-2 my-4 flex items-center justify-center">
+              <img 
+                src="familia-e-escola.png" 
+                alt="Família e Escola" 
+                class="w-full h-56 sm:h-72 object-contain hover:scale-105 transition-transform duration-300"
+                onerror="this.onerror=null; this.src='Família e Escola.png';"
+              />
+            </div>
+
+            <!-- BOTÕES REDIRECIONANDO PARA OS SIMULADORES -->
+            <div class="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <a 
+                href="simulador_de_drone_plano_cartesiano.html" 
+                class="w-full inline-flex items-center justify-center px-3 sm:px-4 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs sm:text-sm text-center leading-tight shadow-lg shadow-sky-600/20 transition-all duration-200 active:scale-[0.98]"
+              >
+                Iniciar Oficina
+              </a>
+
+              <a 
+                href="file:///C:/Users/rafa_/OneDrive/%C3%81rea%20de%20Trabalho/Oficina/drones3.html" 
+                class="w-full inline-flex items-center justify-center px-3 sm:px-4 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs sm:text-sm text-center leading-tight shadow-lg shadow-amber-500/20 transition-all duration-200 active:scale-[0.98]"
+              >
+                Classificação de Triângulos
+              </a>
+
+              <a 
+                href="file:///C:/Users/rafa_/OneDrive/%C3%81rea%20de%20Trabalho/Oficina/%C3%A1rea%20de%20figuras%20planas.html" 
+                class="w-full inline-flex items-center justify-center px-3 sm:px-4 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs sm:text-sm text-center leading-tight shadow-lg shadow-emerald-600/20 transition-all duration-200 active:scale-[0.98]"
+              >
+                Fórmula Áreas
+              </a>
+
+              <a 
+                href="file:///C:/Users/rafa_/OneDrive/%C3%81rea%20de%20Trabalho/Oficina/gemini-code-1789929261085.html" 
+                class="w-full inline-flex items-center justify-center px-3 sm:px-4 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs sm:text-sm text-center leading-tight shadow-lg shadow-indigo-600/20 transition-all duration-200 active:scale-[0.98]"
+              >
+                Equação do 2º grau
+              </a>
+
+              <!-- NOVO BOTÃO ADICIONADO -->
+              <a 
+                href="file:///C:/Users/rafa_/OneDrive/%C3%81rea%20de%20Trabalho/Oficina/gemini-code-1789932341692.html" 
+                class="w-full sm:col-span-2 inline-flex items-center justify-center px-3 sm:px-4 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs sm:text-sm text-center leading-tight shadow-lg shadow-purple-600/20 transition-all duration-200 active:scale-[0.98]"
+              >
+                Atividade Interativa Extra
+              </a>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Ficha Técnica (Direita) -->
+        <div class="info-card-container lg:col-span-5 w-full">
+          <aside class="rounded-xl sm:rounded-2xl bg-white border border-slate-200/90 p-5 sm:p-6 shadow-md sm:shadow-xl shadow-slate-200/50">
+            
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <h2 class="text-sm sm:text-base font-serif font-bold text-slate-900">Ficha da Oficina</h2>
+              <span class="p-1.5 rounded-lg bg-sky-50 text-sky-600">
+                <i data-lucide="building" class="w-4 h-4"></i>
+              </span>
+            </div>
+
+            <div class="space-y-3.5">
+              <div class="info-row">
+                <span class="block text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Professor</span>
+                <span class="text-sm font-semibold text-slate-800">Marcos</span>
+              </div>
+
+              <div class="info-row border-t border-slate-100 pt-3">
+                <span class="block text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Escola / Secretaria</span>
+                <span class="text-xs sm:text-sm font-semibold text-slate-800 leading-snug block">ESCOLA MUNICIPAL JOSÉ CARDOSO DE LIMA. SEC LEM BA</span>
+              </div>
+
+              <div class="info-row border-t border-slate-100 pt-3">
+                <span class="block text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Ano Letivo</span>
+                <span class="text-sm font-semibold text-slate-800">2026</span>
+              </div>
+            </div>
+
+          </aside>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <script>
+    lucide.createIcons();
+  </script>
+ </body>
+</html>

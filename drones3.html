@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Drones - Marcação de Ângulo Reto</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+        min-height: 100vh;
+        background: #0f172a;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        overflow-x: hidden;
+        overflow-y: auto;
+        padding-bottom: 20px;
+    }
+    
+    header {
+        padding: 12px 15px;
+        text-align: center;
+        width: 100%;
+        background: #1e293b;
+        border-bottom: 2px solid #3b82f6;
+    }
+
+    header h3 {
+        font-size: 1.1rem;
+        margin-bottom: 2px;
+    }
+
+    header p {
+        font-size: 0.85rem;
+        color: #94a3b8;
+    }
+
+    main {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        padding: 10px;
+    }
+
+    .cartesian-plane {
+        width: min(92vw, 500px);
+        height: min(92vw, 500px);
+        background: white;
+        position: relative;
+        margin-top: 5px;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        touch-action: manipulation;
+    }
+
+    #angleCanvas { 
+        position: absolute; 
+        top: 0; 
+        left: 0; 
+        width: 100%;
+        height: 100%;
+        z-index: 30; 
+        pointer-events: none; 
+    }
+
+    .grid-line { position: absolute; background: #e2e8f0; }
+    .grid-line.vertical { width: 1px; height: 100%; }
+    .grid-line.horizontal { width: 100%; height: 1px; }
+    
+    .axis { position: absolute; background: #64748b; z-index: 2; }
+    .axis.x-axis { width: 100%; height: 2px; top: 50%; left: 0; }
+    .axis.y-axis { width: 2px; height: 100%; left: 50%; top: 0; }
+    .axis-label { 
+        position: absolute; 
+        color: #64748b; 
+        font-size: Clamp(8px, 2vw, 10px); 
+        font-weight: bold; 
+        transform: translate(-50%, -50%); 
+        z-index: 5; 
+        user-select: none;
+    }
+
+    .drone {
+        position: absolute; 
+        width: clamp(35px, 8vw, 48px); 
+        height: clamp(35px, 8vw, 48px); 
+        z-index: 100;
+        transform: translate(-50%, -50%);
+        transition: left 1.5s cubic-bezier(0.4, 0, 0.2, 1), top 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .propeller { animation: spin 0.1s linear infinite; transform-origin: center; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    .coord-tag {
+        position: absolute; 
+        background: rgba(15, 23, 42, 0.85); 
+        color: white;
+        padding: 2px 6px; 
+        border-radius: 4px; 
+        font-size: clamp(9px, 2.2vw, 11px);
+        pointer-events: none; 
+        z-index: 101; 
+        transform: translate(-50%, -160%);
+        white-space: nowrap;
+    }
+
+    .triangle-line { 
+        position: absolute; 
+        height: 3px; 
+        background: #3b82f6; 
+        z-index: 40; 
+        transform-origin: left center; 
+        pointer-events: none; 
+    }
+    
+    .angle-label {
+        position: absolute; 
+        color: #dc2626; 
+        font-weight: 900; 
+        font-size: clamp(14px, 3.5vw, 18px);
+        z-index: 110; 
+        pointer-events: none; 
+        text-shadow: 1px 1px 0px white, -1px -1px 0px white, 1px -1px 0px white, -1px 1px 0px white;
+    }
+
+    .controls { 
+        margin-top: 15px; 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        gap: 10px; 
+        width: 100%;
+        padding: 0 15px;
+    }
+
+    .btn {
+        background: #3b82f6; 
+        color: white; 
+        border: none;
+        padding: 12px 28px; 
+        border-radius: 50px; 
+        cursor: pointer;
+        font-weight: bold; 
+        font-size: 0.95rem;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        transition: background 0.2s, transform 0.1s;
+        width: min(100%, 300px);
+    }
+
+    .btn:active { transform: scale(0.97); background: #2563eb; }
+
+    .type-badge { 
+        background: #10b981; 
+        padding: 6px 18px; 
+        border-radius: 20px; 
+        font-weight: bold; 
+        font-size: 0.85rem; 
+        letter-spacing: 0.5px;
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <h3>Escola Municipal José Cardoso de Lima</h3>
+    <p>Geometria Analítica: Identificação de Ângulos Retos</p>
+</header>
+
+<main>
+    <div class="cartesian-plane" id="plane">
+        <canvas id="angleCanvas"></canvas>
+        <div class="axis x-axis"></div>
+        <div class="axis y-axis"></div>
+        
+        <div class="triangle-line" id="line1"></div>
+        <div class="triangle-line" id="line2"></div>
+        <div class="triangle-line" id="line3"></div>
+
+        <div class="angle-label" id="ang1"></div>
+        <div class="angle-label" id="ang2"></div>
+        <div class="angle-label" id="ang3"></div>
+
+        <div id="drone1" class="drone"></div>
+        <div id="drone2" class="drone"></div>
+        <div id="drone3" class="drone"></div>
+        
+        <div id="tag1" class="coord-tag"></div>
+        <div id="tag2" class="coord-tag"></div>
+        <div id="tag3" class="coord-tag"></div>
+    </div>
+</main>
+
+<div class="controls">
+    <div class="type-badge" id="type-display">Aguardando...</div>
+    <button class="btn" onclick="generateMission()">GERAR NOVO TRIÂNGULO</button>
+</div>
+
+<script>
+    const plane = document.getElementById('plane');
+    const canvas = document.getElementById('angleCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    let gridSize = 30;
+    let center = 150;
+    let modeIndex = 0;
+
+    const droneSVGs = [
+        `<svg viewBox="0 0 100 100"><path d="M10 50 L90 50 M50 10 L50 90" stroke="#f97316" stroke-width="8"/><circle cx="50" cy="50" r="15" fill="#c2410c"/><g class="propeller"><circle cx="10" cy="50" r="8" fill="#fb923c"/></g><g class="propeller"><circle cx="90" cy="50" r="8" fill="#fb923c"/></g></svg>`,
+        `<svg viewBox="0 0 100 100"><rect x="20" y="20" width="60" height="60" rx="10" fill="#0d9488"/><circle cx="50" cy="50" r="10" fill="white"/><g class="propeller"><rect x="10" y="10" width="20" height="5" fill="#5eead4"/></g><g class="propeller"><rect x="70" y="10" width="20" height="5" fill="#5eead4"/></g></svg>`,
+        `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="35" fill="#7c3aed" stroke="white" stroke-width="3"/><path d="M50 20 L80 80 L20 80 Z" fill="#4c1d95"/><g class="propeller"><circle cx="50" cy="15" r="10" fill="#a78bfa"/></g></svg>`
+    ];
+
+    function setupGrid() {
+        const size = plane.clientWidth;
+        canvas.width = size;
+        canvas.height = size;
+        gridSize = size / 20;
+        center = size / 2;
+
+        plane.querySelectorAll('.grid-line, .axis-label').forEach(el => el.remove());
+
+        for(let i = 0; i <= 20; i++) {
+            let val = i - 10;
+            
+            let h = document.createElement('div'); 
+            h.className = 'grid-line horizontal'; 
+            h.style.top = (i * gridSize) + 'px'; 
+            plane.appendChild(h);
+
+            let v = document.createElement('div'); 
+            v.className = 'grid-line vertical'; 
+            v.style.left = (i * gridSize) + 'px'; 
+            plane.appendChild(v);
+
+            if(val !== 0) {
+                let lx = document.createElement('div'); 
+                lx.className = 'axis-label'; 
+                lx.style.left = (i * gridSize) + 'px'; 
+                lx.style.top = (center + 12) + 'px'; 
+                lx.textContent = val; 
+                plane.appendChild(lx);
+
+                let ly = document.createElement('div'); 
+                ly.className = 'axis-label'; 
+                ly.style.left = (center - 12) + 'px'; 
+                ly.style.top = (center - val * gridSize) + 'px'; 
+                ly.textContent = val; 
+                plane.appendChild(ly);
+            }
+        }
+
+        [1,2,3].forEach(i => {
+            let d = document.getElementById(`drone${i}`);
+            if(d.dataset.cx !== undefined) {
+                d.style.left = (center + parseFloat(d.dataset.cx) * gridSize) + 'px';
+                d.style.top = (center - parseFloat(d.dataset.cy) * gridSize) + 'px';
+            }
+        });
+    }
+
+    function init() {
+        [1,2,3].forEach(i => document.getElementById(`drone${i}`).innerHTML = droneSVGs[i-1]);
+        setupGrid();
+        generateMission();
+        updateLoop();
+
+        window.addEventListener('resize', setupGrid);
+    }
+
+    function getAngle(A, B, C) {
+        let dAB = Math.hypot(B.x - A.x, B.y - A.y);
+        let dAC = Math.hypot(C.x - A.x, C.y - A.y);
+        let dBC = Math.hypot(C.x - B.x, C.y - B.y);
+        return Math.acos((dAB**2 + dAC**2 - dBC**2) / (2 * dAB * dAC)) * 180 / Math.PI;
+    }
+
+    function generateMission() {
+        const types = [
+            { name: "ACUTÂNGULO", check: (angs) => angs.every(a => a < 85) },
+            { name: "RETÂNGULO", check: (angs) => angs.some(a => Math.round(a) === 90) },
+            { name: "OBTUSÂNGULO", check: (angs) => angs.some(a => a > 95) }
+        ];
+        
+        let valid = false, pts = [];
+        while(!valid) {
+            pts = [1,2,3].map(() => ({ x: Math.floor(Math.random()*13)-6, y: Math.floor(Math.random()*13)-6 }));
+            let as = [getAngle(pts[0],pts[1],pts[2]), getAngle(pts[1],pts[2],pts[0]), getAngle(pts[2],pts[0],pts[1])];
+            if (as.every(a => a >= 40) && types[modeIndex].check(as)) valid = true;
+        }
+
+        pts.forEach((p, i) => {
+            let d = document.getElementById(`drone${i+1}`);
+            d.dataset.cx = p.x; 
+            d.dataset.cy = p.y;
+            d.style.left = (center + p.x * gridSize) + 'px'; 
+            d.style.top = (center - p.y * gridSize) + 'px';
+        });
+
+        document.getElementById('type-display').textContent = types[modeIndex].name;
+        modeIndex = (modeIndex + 1) % 3;
+    }
+
+    function updateLoop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        const getP = (id) => {
+            let r = document.getElementById(id).getBoundingClientRect();
+            let p = plane.getBoundingClientRect();
+            return { x: r.left - p.left + r.width/2, y: r.top - p.top + r.height/2 };
+        };
+
+        let p1 = getP('drone1'), p2 = getP('drone2'), p3 = getP('drone3');
+        const points = [p1, p2, p3];
+
+        [1,2,3].forEach(i => {
+            let d = document.getElementById(`drone${i}`);
+            let tag = document.getElementById(`tag${i}`);
+            let p = points[i-1];
+
+            tag.style.left = p.x + 'px'; 
+            tag.style.top = p.y + 'px'; 
+            tag.textContent = `(${d.dataset.cx},${d.dataset.cy})`;
+
+            let line = document.getElementById(`line${i}`);
+            let nextP = points[i % 3];
+            
+            line.style.width = Math.hypot(nextP.x - p.x, nextP.y - p.y) + 'px'; 
+            line.style.left = p.x + 'px'; 
+            line.style.top = p.y + 'px';
+            line.style.transform = `rotate(${Math.atan2(nextP.y - p.y, nextP.x - p.x) * 180 / Math.PI}deg)`;
+        });
+
+        const drawA = (id, A, B, C) => {
+            let el = document.getElementById(id);
+            let angDeg = Math.round(getAngle(A,B,C));
+            el.textContent = angDeg + "°";
+
+            let angB = Math.atan2(B.y - A.y, B.x - A.x);
+            let angC = Math.atan2(C.y - A.y, C.x - A.x);
+            let diff = angC - angB;
+
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+
+            ctx.strokeStyle = "#dc2626"; 
+            ctx.fillStyle = "#dc2626";
+            ctx.lineWidth = 2;
+            
+            if (angDeg === 90) {
+                let size = Math.min(18, gridSize * 0.6);
+                let pB = { x: A.x + Math.cos(angB) * size, y: A.y + Math.sin(angB) * size };
+                let pC = { x: A.x + Math.cos(angC) * size, y: A.y + Math.sin(angC) * size };
+                let pCorner = { x: pB.x + (pC.x - A.x), y: pB.y + (pC.y - A.y) };
+                
+                ctx.beginPath();
+                ctx.moveTo(pB.x, pB.y); 
+                ctx.lineTo(pCorner.x, pCorner.y); 
+                ctx.lineTo(pC.x, pC.y);
+                ctx.stroke();
+
+                ctx.beginPath(); 
+                ctx.arc(A.x + (pCorner.x - A.x)*0.5, A.y + (pCorner.y - A.y)*0.5, 1.5, 0, 7); 
+                ctx.fill();
+            } else {
+                let radius = Math.min(22, gridSize * 0.7);
+                ctx.beginPath(); 
+                ctx.arc(A.x, A.y, radius, angB, angB + diff, diff < 0); 
+                ctx.stroke();
+            }
+
+            let midAng = angB + diff / 2;
+            let offset = Math.min(38, gridSize * 1.2);
+            el.style.left = (A.x + Math.cos(midAng) * offset - 10) + 'px';
+            el.style.top = (A.y + Math.sin(midAng) * offset - 10) + 'px';
+        };
+
+        drawA('ang1', p1, p2, p3); 
+        drawA('ang2', p2, p3, p1); 
+        drawA('ang3', p3, p1, p2);
+
+        requestAnimationFrame(updateLoop);
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>
