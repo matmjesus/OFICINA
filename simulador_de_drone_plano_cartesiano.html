@@ -162,11 +162,6 @@
         <main class="w-full md:w-auto flex-1 bg-white rounded-2xl p-2 sm:p-4 shadow-2xl border border-slate-200 flex items-center justify-center relative min-h-[320px] sm:min-h-[460px]">
             <div id="canvasContainer" class="w-full h-full max-w-[85vw] max-h-[85vw] sm:max-w-[500px] sm:max-h-[500px] aspect-square relative flex items-center justify-center">
                 <canvas id="cartesianCanvas" class="w-full h-full block cursor-crosshair rounded-xl"></canvas>
-                
-                <!-- Floating Tooltip -->
-                <div id="gridTooltip" class="absolute pointer-events-none bg-slate-900/90 text-white text-xs font-mono px-2 py-1 rounded shadow-lg border border-slate-700 backdrop-blur-sm opacity-0 transition-opacity duration-150 z-20">
-                    (0, 0)
-                </div>
             </div>
         </main>
     </div>
@@ -272,7 +267,6 @@
         const posDisplay = document.getElementById('posDisplay');
         const statusText = document.getElementById('statusText');
         const statusIndicator = document.getElementById('statusIndicator');
-        const gridTooltip = document.getElementById('gridTooltip');
 
         const btnRandom = document.getElementById('btnRandom');
         const btnCenter = document.getElementById('btnCenter');
@@ -676,23 +670,6 @@
                 handleCanvasPointer(touch.clientX, touch.clientY);
             }
         }, { passive: false });
-
-        canvas.addEventListener('mousemove', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const mousePx = e.clientX - rect.left;
-            const mousePy = e.clientY - rect.top;
-
-            const gridPoint = pixelToGrid(mousePx, mousePy);
-
-            gridTooltip.textContent = `(${gridPoint.x}, ${gridPoint.y})`;
-            gridTooltip.style.left = `${e.clientX - rect.left + 15}px`;
-            gridTooltip.style.top = `${e.clientY - rect.top - 25}px`;
-            gridTooltip.style.opacity = '1';
-        });
-
-        canvas.addEventListener('mouseleave', () => {
-            gridTooltip.style.opacity = '0';
-        });
 
         // Key '1' shortcut for random flight
         window.addEventListener('keydown', (e) => {
